@@ -1,3 +1,9 @@
+# Config file with the bot token
+config.json
+
+# Database file is not supposed to be versioned
+list-bot.sqlite
+
 # JetBrains IDEs
 .idea
 
