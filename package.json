@@ -1,0 +1,25 @@
+{
+  "name": "list-bot",
+  "version": "1.0.0",
+  "description": "A list management bot for discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArSn/list-bot.git"
+  },
+  "author": "ArSn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ArSn/list-bot/issues"
+  },
+  "homepage": "https://github.com/ArSn/list-bot#readme",
+  "dependencies": {
+    "discord.js": "^14.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.28.0"
+  }
+}
