@@ -12,6 +12,10 @@ class List {
 		await this.db.run('INSERT INTO list (name, counter) VALUES (?, 0)', itemName);
 	}
 
+	async getList() {
+		return await this.db.all('SELECT name, counter FROM list ORDER BY name ASC');
+	}
+
 	addCount( itemName, count ) {
 
 	}

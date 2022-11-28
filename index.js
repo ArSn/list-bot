@@ -39,7 +39,7 @@ function respond(message, text) {
 }
 
 client.on(Events.MessageCreate, async (message) => {
-	console.log('-------------------------------');
+	console.log('---------------------------------------------------------------------------------------------');
 	console.log('New Message incoming:', message);
 
 
@@ -69,12 +69,22 @@ client.on(Events.MessageCreate, async (message) => {
 			const name = tokenizedMessage.slice(1).join(' ');
 			// todo: take care of cases where the item already exists, return the current counter as well
 			await list.addItem(name);
-			respond(message, message.author.username + ' added a new item to the list: ' + name);
+			respond(message, message.author.username + ' hat ein neues Item hinzugefügt: ' + name);
+			break;
+		}
+		case 'showlist': {
+			const items = await list.getList();
+			let response = 'Die Liste sieht wie folgt aus: ';
+			console.log(items);
+			items.forEach((item) => {
+				response += '\n' + item.name + ': ' + item.counter;
+			});
+			respond(message, response);
 			break;
 		}
 	}
 
-
+	console.log('-------------------------------------------EOM-----------------------------------------------');
 });
 
 // Log in to Discord with your client's token
