@@ -61,25 +61,36 @@ client.on(Events.MessageCreate, async (message) => {
 		return;
 	}
 
+	let name, count;
 	const list = new List(db);
+	const username = message.author.username;
 	await list.ensureTableExists(); // todo: can we move this back to the class?
 
 	switch (command) {
 		case 'newitem': {
-			const name = tokenizedMessage.slice(1).join(' ');
+			name = tokenizedMessage.slice(1).join(' ');
 			// todo: take care of cases where the item already exists, return the current counter as well
 			await list.addItem(name);
-			respond(message, message.author.username + ' hat ein neues Item hinzugefügt: ' + name);
+			respond(message, username + ' hat ein neues Item hinzugefügt: ' + name);
 			break;
 		}
 		case 'showlist': {
 			const items = await list.getList();
 			let response = 'Die Liste sieht wie folgt aus: ';
-			console.log(items);
 			items.forEach((item) => {
 				response += '\n' + item.name + ': ' + item.counter;
 			});
 			respond(message, response);
+			break;
+		}
+		case 'add': {
+			count = parseInt(tokenizedMessage[1]);
+			name = tokenizedMessage.slice(2).join(' ');
+
+			await list.addCount(name, count);
+			const newCount = await list.getCount(name);
+
+			respond(message, `${username} hat ${count} mal ${name} hinzugefügt. Stand jetzt: ${newCount}`);
 			break;
 		}
 	}

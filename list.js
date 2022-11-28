@@ -16,11 +16,16 @@ class List {
 		return await this.db.all('SELECT name, counter FROM list ORDER BY name ASC');
 	}
 
-	addCount( itemName, count ) {
+	async addCount(itemName, count) {
+		await this.db.run('UPDATE list SET counter = counter + ? WHERE name = ?', count, itemName);
+	}
 
+	async getCount(itemName) {
+		const result = await this.db.get('SELECT counter FROM list WHERE name = ?', itemName);
+		return result.counter;
 	}
 }
 
 module.exports = {
-	List
+	List,
 };
