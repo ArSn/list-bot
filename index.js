@@ -61,36 +61,60 @@ client.on(Events.MessageCreate, async (message) => {
 		return;
 	}
 
-	let name, count;
+	let item_name, item_count;
 	const list = new List(db);
-	const username = message.author.username;
+	const user = message.author;
 	await list.ensureTableExists(); // todo: can we move this back to the class?
 
 	switch (command) {
 		case 'newitem': {
-			name = tokenizedMessage.slice(1).join(' ');
-			// todo: take care of cases where the item already exists, return the current counter as well
-			await list.addItem(name);
-			respond(message, username + ' hat ein neues Item hinzugefügt: ' + name);
+			item_name = tokenizedMessage.slice(1).join(' ');
+
+			if (await list.isItemAllowed(item_name)) {
+				respond(item_name + ' ist bereits erlaubt.');
+			}
+
+			await list.addNewAllowedItem(item_name);
+			respond(message, user.username + ' hat ein neues Item hinzugefügt: ' + item_name);
 			break;
 		}
 		case 'showlist': {
-			const items = await list.getList();
-			let response = 'Die Liste sieht wie folgt aus: ';
-			items.forEach((item) => {
-				response += '\n' + item.name + ': ' + item.counter;
+			const items = await list.getListForUser(user);
+
+			if (!items.length) {
+				respond(message, 'Deine Liste ist leer.');
+				break;
+			}
+
+			let response = 'Deine Liste sieht wie folgt aus: ';
+			items.forEach((row) => {
+				response += '\n' + row.item_name + ': ' + row.counter;
 			});
 			respond(message, response);
 			break;
 		}
+		case 'showfulllist': {
+			// todo: liste für ALLE use ranzeigen
+			break;
+		}
 		case 'add': {
-			count = parseInt(tokenizedMessage[1]);
-			name = tokenizedMessage.slice(2).join(' ');
+			item_count = parseInt(tokenizedMessage[1]);
+			item_name = tokenizedMessage.slice(2).join(' ');
 
-			await list.addCount(name, count);
-			const newCount = await list.getCount(name);
+			if (!item_count || !item_name) {
+				respond(message, 'What? Schreibweise zum hinzufügen ist: !add <Anzahl> <Item>');
+				break;
+			}
 
-			respond(message, `${username} hat ${count} mal ${name} hinzugefügt. Stand jetzt: ${newCount}`);
+			if (!await list.isItemAllowed(item_name)) {
+				respond(message, 'Das Item "' + item_name + '" ist nicht erlaubt. Füge es erst mit !newitem <item_name> hinzu.');
+				break;
+			}
+
+			await list.addToCounter(user, item_name, item_count);
+			const newCount = await list.getCount(user, item_name);
+
+			respond(message, `${user.username} hat ${item_count} mal ${item_name} hinzugefügt. Stand jetzt: ${newCount}`);
 			break;
 		}
 	}
