@@ -56,14 +56,19 @@ client.on(Events.MessageCreate, async (message) => {
 	const tokenizedMessage = message.content.trim().split(/\s+/);
 	const command = tokenizedMessage[0].substring(1);
 
-	if (!['add', 'newitem', 'showlist', 'resetlist'].includes(command)) {
+	if (![
+		'add',
+		'newitem',
+		'showlist',
+		'showfulllist',
+	].includes(command)) {
 		console.log(`Unknown command "!${command}", ignoring.`);
 		return;
 	}
 
 	let item_name, item_count;
 	const list = new List(db);
-	const user = message.author;
+	let user = message.author;
 	await list.ensureTableExists(); // todo: can we move this back to the class?
 
 	switch (command) {
@@ -79,14 +84,29 @@ client.on(Events.MessageCreate, async (message) => {
 			break;
 		}
 		case 'showlist': {
+			const username = tokenizedMessage[1];
+			if (username) {
+				const userId = await list.getUserIdByName(username);
+				if (!userId) {
+					respond(message, 'User ' + username + ' nicht gefunden.');
+					break;
+				}
+
+				user = await client.users.fetch(userId);
+				if (!user) {
+					respond(message, 'Error: User found in database but not in discord API. Please contact admin.');
+					break;
+				}
+			}
+
 			const items = await list.getListForUser(user);
 
 			if (!items.length) {
-				respond(message, 'Deine Liste ist leer.');
+				respond(message, user.username + ' hat keine Items auf der Liste.');
 				break;
 			}
 
-			let response = 'Deine Liste sieht wie folgt aus: ';
+			let response = user.username + ' hat folgende Items auf der Liste:\n';
 			items.forEach((row) => {
 				response += '\n' + row.item_name + ': ' + row.counter;
 			});
@@ -94,7 +114,8 @@ client.on(Events.MessageCreate, async (message) => {
 			break;
 		}
 		case 'showfulllist': {
-			// todo: liste für ALLE use ranzeigen
+			const items = await list.getFullList();
+			// todo: implement this
 			break;
 		}
 		case 'add': {

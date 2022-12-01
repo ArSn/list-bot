@@ -64,6 +64,20 @@ class List {
 			'ORDER BY items.item_name ASC', user.id);
 	}
 
+	async getFullList() {
+		return await this.db.all('SELECT item_name, counter FROM counters ' +
+			'INNER JOIN items ON counters.item_id = items.id ' +
+			'ORDER BY items.item_name ASC');
+	}
+
+	async getUserIdByName(userName) {
+		const result = await this.db.get('SELECT user_id FROM users WHERE user_name = ?', userName);
+		if (!result) {
+			return null;
+		}
+		return result.user_id;
+	}
+
 	async getCount(user, itemName) {
 		const itemId = await this.getItemId(itemName);
 		const result = await this.db.get('SELECT counter FROM counters WHERE user_id = ? AND item_id = ?', user.id, itemId);
