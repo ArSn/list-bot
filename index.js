@@ -11,8 +11,9 @@ if (!fs.existsSync(configName)) {
 	process.exit(1);
 }
 
-const { token } = require(configName);
+const { token, sqlitefile } = require(configName);
 console.log('Running with config: ' + configName);
+console.log('Database file: ' + sqlitefile);
 
 
 const sqlite3 = require('sqlite3').verbose();
@@ -23,7 +24,7 @@ const { open } = require('sqlite');
 (async () => {
 
 	const db = await open({
-		filename: './list-bot.sqlite',
+		filename: sqlitefile,
 		driver: sqlite3.Database,
 	});
 

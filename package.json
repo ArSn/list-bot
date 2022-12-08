@@ -4,7 +4,7 @@
   "description": "A list management bot for discord",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",

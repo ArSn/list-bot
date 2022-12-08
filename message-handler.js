@@ -43,7 +43,6 @@ class MessageHandler {
 		}
 
 		let item_name, item_count;
-		console.log("what is db here?", this.db);
 		const list = new List(this.db);
 		let user = message.author;
 		await list.ensureTableExists(); // todo: can we move this back to the class?

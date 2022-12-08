@@ -1,4 +1,4 @@
 {
 	"token": "your-token-goes-here",
-	"sqlite-file": "list-bot.sqlite"
+	"sqlitefile": "list-bot.sqlite"
 }

@@ -1,4 +1,4 @@
 {
   "token": "test-does-not-need-a-token-because-it-mocks-the-api",
-  "sqlite-file": "list-bot.test.sqlite"
+  "sqlitefile": "list-bot.test.sqlite"
 }
