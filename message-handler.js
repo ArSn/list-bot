@@ -52,7 +52,8 @@ class MessageHandler {
 				item_name = tokenizedMessage.slice(1).join(' ');
 
 				if (await list.isItemAllowed(item_name)) {
-					this.respond(item_name + ' ist bereits erlaubt.');
+					this.respond(message, item_name + ' ist bereits erlaubt.');
+					return;
 				}
 
 				await list.addNewAllowedItem(item_name);

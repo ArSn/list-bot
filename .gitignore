@@ -2,7 +2,7 @@
 config.json
 
 # Database file is not supposed to be versioned
-list-bot.sqlite
+*.sqlite
 
 # JetBrains IDEs
 .idea
