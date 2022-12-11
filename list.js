@@ -6,30 +6,22 @@ class List {
 
 	async ensureTableExists() {
 
-		// allowed items
-		await this.db.run('CREATE TABLE IF NOT EXISTS items ' +
-			'(id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-			'item_name TEXT)');
+		// get script from database structure file and run it
+		const fs = require('fs');
+		const path = require('path');
+		const filePath = path.join(__dirname, 'database-structure.sql');
+		const structureScript = fs.readFileSync(filePath, 'utf8');
 
-		await this.db.run('CREATE UNIQUE INDEX IF NOT EXISTS items_item_name ON items (item_name)');
+		// Replace the linebreaks away and split into single commands to run them one by one
+		for (const statement of structureScript.replace(/(\r\n|\n|\r)/gm, '').split(';')) {
+			// Ignore empty statements
+			if (statement) {
+				await this.db.run(statement);
 
-		// users
-		await this.db.run('CREATE TABLE IF NOT EXISTS users ' +
-			'(id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-			'user_id TEXT, ' +
-			'user_name TEXT)');
+			}
+		}
 
-		await this.db.run('CREATE UNIQUE INDEX IF NOT EXISTS users_user_id ON users (user_id)');
-
-		// counters
-		await this.db.run('CREATE TABLE IF NOT EXISTS counters ' +
-			'(id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-			'user_id TEXT, ' +
-			'item_id INTEGER, ' +
-			'counter INTEGER)');
-
-		await this.db.run('CREATE INDEX IF NOT EXISTS counters_user_id ON counters (user_id)');
-		await this.db.run('CREATE UNIQUE INDEX IF NOT EXISTS counters_user_and_item_ids ON counters (user_id, item_id)');
+		await this.db.run(structureScript);
 	}
 
 	async insertUserIfNew(user) {

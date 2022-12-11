@@ -79,7 +79,7 @@ class MessageHandler {
 				const items = await list.getListForUser(user);
 
 				if (!items.length) {
-					respond(message, user.username + ' hat keine Items auf der Liste.');
+					this.respond(message, user.username + ' hat keine Items auf der Liste.');
 					break;
 				}
 
