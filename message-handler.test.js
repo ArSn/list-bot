@@ -336,20 +336,7 @@ describe('MessageHandler', () => {
 			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 2, 10);
 			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 3, 15);
 
-			const channelMock = {
-				send: jest.fn(),
-			};
-
-			const channelSendSpy = jest.spyOn(channelMock, 'send').mockImplementation(jest.fn());
-
-			const clientMock = {
-				channels: {
-					cache: {
-						get: jest.fn().mockReturnValue(channelMock),
-					},
-				},
-			};
-			const messageHandler = new MessageHandler(clientMock, testDb);
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
 
 			const messageMock = {
 				content: '!showlist',
@@ -368,7 +355,78 @@ describe('MessageHandler', () => {
 			);
 
 			await testDb.close();
-		})
+		});
+	});
+
+	describe('Handles !add command', () => {
+		test('Responds with error if the syntax of the command is wrong', async () => {
+			const testDb = await connectToTestDatabase();
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!add',
+			};
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('What? Schreibweise zum hinzufügen ist: !add <Anzahl> <Item>');
+			channelSendSpy.mockClear();
+
+			messageMock.content = '!add 23';
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('What? Schreibweise zum hinzufügen ist: !add <Anzahl> <Item>');
+			channelSendSpy.mockClear();
+
+			messageMock.content = '!add waffeln';
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('What? Schreibweise zum hinzufügen ist: !add <Anzahl> <Item>');
+
+			await testDb.close();
+		});
+
+		test('Responds with error if the item is not allowed', async () => {
+			const testDb = await connectToTestDatabase();
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!add 14 kuchen',
+			};
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('Das Item "kuchen" ist nicht erlaubt. Füge es erst mit !newitem <item_name> hinzu.');
+
+			await testDb.close();
+		});
+
+		test('Adds the item to the list of the user if the item is allowed and returns the new counter', async () => {
+			const testDb = await connectToTestDatabase();
+
+			await testDb.run('INSERT INTO users (user_id, user_name) VALUES (?, ?)', 123, 'listhaver');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 1, 'salat');
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!add 1 salat',
+				author: {
+					id: 123,
+					username: 'listhaver',
+				},
+			};
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('listhaver hat 1 mal salat hinzugefügt. Stand jetzt: 1');
+			channelSendSpy.mockClear();
+
+			messageMock.content = '!add 2 salat';
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('listhaver hat 2 mal salat hinzugefügt. Stand jetzt: 3');
+			channelSendSpy.mockClear();
+
+			messageMock.content = '!add 5 salat';
+			await messageHandler.handleMessage(messageMock);
+			expect(channelSendSpy).toHaveBeenCalledWith('listhaver hat 5 mal salat hinzugefügt. Stand jetzt: 8');
+
+			await testDb.close();
+		});
 	});
 
 });
