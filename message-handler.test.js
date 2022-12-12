@@ -275,6 +275,53 @@ describe('MessageHandler', () => {
 
 			await testDb.close();
 		});
+
+		test('Responds with list of items if the user has items', async () => {
+			const testDb = await connectToTestDatabase();
+
+			await testDb.run('INSERT INTO users (user_id, user_name) VALUES (?, ?)', 123, 'horstkopf');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 1, 'testitem1');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 2, 'testitem2');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 3, 'testitem3');
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 1, 5);
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 2, 10);
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 3, 15);
+
+			const channelMock = {
+				send: jest.fn(),
+			};
+
+			const channelSendSpy = jest.spyOn(channelMock, 'send').mockImplementation(jest.fn());
+
+			const clientMock = {
+				channels: {
+					cache: {
+						get: jest.fn().mockReturnValue(channelMock),
+					},
+				},
+				users: {
+					fetch: jest.fn().mockResolvedValue({
+						id: 123,
+						username: 'horstkopf',
+					}),
+				},
+			};
+			const messageHandler = new MessageHandler(clientMock, testDb);
+
+			const messageMock = {
+				content: '!showlist horstkopf',
+			};
+
+			await messageHandler.handleMessage(messageMock);
+
+			expect(channelSendSpy).toHaveBeenCalledWith('horstkopf hat folgende Items auf der Liste:\n' +
+				'\ntestitem1: 5' +
+				'\ntestitem2: 10' +
+				'\ntestitem3: 15',
+			);
+
+			await testDb.close();
+		});
 	});
 
 });
