@@ -1,11 +1,13 @@
 const { List } = require('./list');
 
+const { Item } = require('./item');
+const { User } = require('./user');
+
 class MessageHandler {
 
 	constructor(client, db) {
 		this.client = client;
 		this.db = db;
-		console.log("constructor db", this.db);
 	}
 
 	respond(message, text) {
@@ -44,46 +46,52 @@ class MessageHandler {
 
 		let item_name, item_count;
 		const list = new List(this.db);
-		let user = message.author;
+		let discord_user = message.author;
 		await list.ensureTableExists(); // todo: can we move this back to the class?
 
 		switch (command) {
 			case 'newitem': {
 				item_name = tokenizedMessage.slice(1).join(' ');
 
-				if (await list.isItemAllowed(item_name)) {
+				const item = new Item(this.db);
+				if (await item.load(item_name)) {
 					this.respond(message, item_name + ' ist bereits erlaubt.');
 					return;
 				}
 
-				await list.addNewAllowedItem(item_name);
-				this.respond(message, user.username + ' hat ein neues Item hinzugefügt: ' + item_name);
+				await item.create(item_name);
+				this.respond(message, discord_user.username + ' hat ein neues Item hinzugefügt: ' + item_name);
 				break;
 			}
 			case 'showlist': {
-				const username = tokenizedMessage[1];
-				if (username) {
-					const userId = await list.getUserIdByName(username);
-					if (!userId) {
-						this.respond(message, 'User ' + username + ' nicht gefunden.');
+				const username_param = tokenizedMessage[1];
+				const user = new User(this.db);
+
+				if (username_param) {
+					await user.loadByUserName(username_param);
+					if (!user.id) {
+						this.respond(message, 'User ' + username_param + ' nicht gefunden.');
 						break;
 					}
 
-					user = await this.client.users.fetch(userId);
-					if (!user) {
+					discord_user = await this.client.users.fetch(user.id);
+					if (!discord_user) {
 						this.respond(message, 'Error: User found in database but not in discord API. Please contact admin.');
 						break;
 					}
 				}
 
-				const items = await list.getListForUser(user);
+				// We don't really need to load it again but what the heck, avoids an extra if to not check
+				await user.load(discord_user.id);
+
+				const items = await list.getListForUser(discord_user);
 
 				if (!items.length) {
-					this.respond(message, user.username + ' hat keine Items auf der Liste.');
+					this.respond(message, discord_user.username + ' hat keine Items auf der Liste.');
 					break;
 				}
 
-				let response = user.username + ' hat folgende Items auf der Liste:\n';
+				let response = discord_user.username + ' hat folgende Items auf der Liste:\n';
 				items.forEach((row) => {
 					response += '\n' + row.item_name + ': ' + row.counter;
 				});
@@ -109,10 +117,10 @@ class MessageHandler {
 					break;
 				}
 
-				await list.addToCounter(user, item_name, item_count);
-				const newCount = await list.getCount(user, item_name);
+				await list.addToCounter(discord_user, item_name, item_count);
+				const newCount = await list.getCount(discord_user, item_name);
 
-				this.respond(message, `${user.username} hat ${item_count} mal ${item_name} hinzugefügt. Stand jetzt: ${newCount}`);
+				this.respond(message, `${discord_user.username} hat ${item_count} mal ${item_name} hinzugefügt. Stand jetzt: ${newCount}`);
 				break;
 			}
 		}
