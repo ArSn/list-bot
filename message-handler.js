@@ -84,15 +84,15 @@ class MessageHandler {
 				// We don't really need to load it again but what the heck, avoids an extra if to not check
 				await user.load(discord_user.id);
 
-				const items = await list.getListForUser(discord_user);
+				const counterList = await user.getCounterList();
 
-				if (!items.length) {
+				if (!counterList.length) {
 					this.respond(message, discord_user.username + ' hat keine Items auf der Liste.');
 					break;
 				}
 
 				let response = discord_user.username + ' hat folgende Items auf der Liste:\n';
-				items.forEach((row) => {
+				counterList.forEach((row) => {
 					response += '\n' + row.item_name + ': ' + row.counter;
 				});
 				this.respond(message, response);

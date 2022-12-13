@@ -1,3 +1,5 @@
+const {Counter} = require("./counter");
+
 class User {
 	constructor(db) {
 		this.db = db;
@@ -40,17 +42,29 @@ class User {
 		return true;
 	}
 
+	async getCounterList() {
+		const sql = `SELECT * FROM counters
+			LEFT JOIN items ON counters.item_id = items.id
+			WHERE user_id = ?`;
+		const params = [this.id];
+		const rows = await this.db.all(sql, params);
 
-	async getUserIdByName(userName) {
-		const result = await this.db.get('SELECT user_id FROM users WHERE user_name = ?', userName);
-		if (!result) {
-			return null;
+		if (!rows) {
+			return false;
 		}
-		return result.user_id;
+
+		const counterList = [];
+
+		rows.forEach((row) => {
+			const counter = new Counter();
+			counter.create(row.user_id, row.item_id, row.item_name, row.counter);
+			counterList.push(counter);
+		});
+
+		return counterList;
 	}
 
 }
-
 
 module.exports = {
 	User,
