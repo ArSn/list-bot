@@ -1,8 +1,7 @@
-const { List } = require('./list');
+const { DatabaseStructure } = require('./database-structure');
 
 const { Item } = require('./item');
 const { User } = require('./user');
-const {Counter} = require("./counter");
 
 class MessageHandler {
 
@@ -45,10 +44,11 @@ class MessageHandler {
 			return;
 		}
 
+		const dbStructure = new DatabaseStructure(this.db);
+		await dbStructure.runStructureScript();
+
 		let item_name, item_count;
-		const list = new List(this.db);
 		let discord_user = message.author;
-		await list.ensureTableExists(); // todo: can we move this back to the class?
 
 		switch (command) {
 			case 'newitem': {
@@ -93,14 +93,13 @@ class MessageHandler {
 				}
 
 				let response = discord_user.username + ' hat folgende Items auf der Liste:\n';
-				counterList.forEach((row) => {
-					response += '\n' + row.item_name + ': ' + row.counter;
+				counterList.forEach((counter) => {
+					response += '\n' + counter.item_name + ': ' + counter.counter;
 				});
 				this.respond(message, response);
 				break;
 			}
 			case 'showfulllist': {
-				const items = await list.getFullList();
 				// todo: implement this
 				break;
 			}

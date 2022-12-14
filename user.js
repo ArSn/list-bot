@@ -51,9 +51,7 @@ class User {
 		const counterList = [];
 
 		rows.forEach((row) => {
-			const counter = new Counter();
-			counter.create(row.user_id, row.item_id, row.item_name, row.counter);
-			counterList.push(counter);
+			counterList.push(new Counter(row.user_id, row.item_id, row.item_name, row.counter));
 		});
 
 		return counterList;
