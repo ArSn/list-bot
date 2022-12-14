@@ -24,6 +24,13 @@ class DatabaseStructure {
 		await this.db.run(structureScript);
 	}
 
+	async recreateDatabase() {
+		await this.db.run('DROP TABLE IF EXISTS counters');
+		await this.db.run('DROP TABLE IF EXISTS items');
+		await this.db.run('DROP TABLE IF EXISTS users');
+		await this.runStructureScript();
+	}
+
 }
 
 module.exports = {
