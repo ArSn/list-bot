@@ -2,6 +2,7 @@ const { List } = require('./list');
 
 const { Item } = require('./item');
 const { User } = require('./user');
+const {Counter} = require("./counter");
 
 class MessageHandler {
 
@@ -112,13 +113,17 @@ class MessageHandler {
 					break;
 				}
 
-				if (!await list.isItemAllowed(item_name)) {
+				const item = new Item(this.db);
+				if (!await item.load(item_name)) {
 					this.respond(message, 'Das Item "' + item_name + '" ist nicht erlaubt. Füge es erst mit !newitem <item_name> hinzu.');
 					break;
 				}
 
-				await list.addToCounter(discord_user, item_name, item_count);
-				const newCount = await list.getCount(discord_user, item_name);
+				const user = new User(this.db);
+				await user.load(discord_user.id);
+
+				await user.incrementCounter(item.id, item_count);
+				const newCount = await user.getCounter(item.id);
 
 				this.respond(message, `${discord_user.username} hat ${item_count} mal ${item_name} hinzugefügt. Stand jetzt: ${newCount}`);
 				break;
