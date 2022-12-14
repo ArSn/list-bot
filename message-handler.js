@@ -2,6 +2,7 @@ const { DatabaseStructure } = require('./database-structure');
 
 const { Item } = require('./item');
 const { User } = require('./user');
+const { FullList } = require('./full-list');
 
 class MessageHandler {
 
@@ -100,7 +101,34 @@ class MessageHandler {
 				break;
 			}
 			case 'showfulllist': {
-				// todo: implement this
+
+				const fullList = new FullList(this.db);
+				const fullListItems = await fullList.getFullList();
+
+				if (!fullListItems.length) {
+					this.respond(message, 'Es steht noch nichts auf der Liste.');
+					break;
+				}
+
+				// aggreagte the full list by item name
+				const fullListAggregated = {};
+				fullListItems.forEach((item) => {
+					if (!fullListAggregated[item.item_name]) {
+						fullListAggregated[item.item_name] = [];
+					}
+					fullListAggregated[item.item_name].push(item);
+				});
+
+				// print out username and counter for each item
+				let response = 'Die Gesamtliste sieht wie folgt aus:\n';
+				Object.keys(fullListAggregated).forEach((itemName) => {
+					response += '\n' + itemName + ':';
+					fullListAggregated[itemName].forEach((item) => {
+						response += '\n\t' + item.user_name + ': ' + item.counter;
+					});
+				});
+
+				this.respond(message, response);
 				break;
 			}
 			case 'add': {
