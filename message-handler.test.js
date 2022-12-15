@@ -321,6 +321,54 @@ describe('MessageHandler', () => {
 		});
 	});
 
+	describe('Handles !showfulllist command', () => {
+		test('Responds with an empty list message if there are no counters on the list', async () => {
+			const testDb = await connectToTestDatabase();
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!showfulllist',
+			};
+
+			await messageHandler.handleMessage(messageMock);
+
+			expect(channelSendSpy).toHaveBeenCalledWith('Es steht noch nichts auf der Liste.');
+
+			await testDb.close();
+		});
+
+		test('Responds with list of items if there are items on the list', async () => {
+			const testDb = await connectToTestDatabase();
+
+			await testDb.run('INSERT INTO users (user_id, user_name) VALUES (?, ?)', 123, 'horstkopf');
+			await testDb.run('INSERT INTO users (user_id, user_name) VALUES (?, ?)', 456, 'wurstnasenkopf');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 1, 'testitem1');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 2, 'testitem2');
+			await testDb.run('INSERT INTO items (id, item_name) VALUES (?, ?)', 3, 'testitem3');
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 1, 5);
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 123, 2, 10);
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 456, 2, 23);
+			await testDb.run('INSERT INTO counters (user_id, item_id, counter) VALUES (?, ?, ?)', 456, 3, 15);
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!showfulllist',
+			};
+
+			await messageHandler.handleMessage(messageMock);
+
+			expect(channelSendSpy).toHaveBeenCalledWith('Die Gesamtliste sieht wie folgt aus:\n\n' +
+				'testitem1: \thorstkopf: 5, \n' +
+				'testitem2: \thorstkopf: 10, wurstnasenkopf: 23, \n' +
+				'testitem3: \twurstnasenkopf: 15, ',
+			);
+
+			await testDb.close();
+		});
+	});
+
 	describe('Handles !add command', () => {
 		test('Responds with error if the syntax of the command is wrong', async () => {
 			const testDb = await connectToTestDatabase();

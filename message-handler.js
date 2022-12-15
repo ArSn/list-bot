@@ -122,9 +122,9 @@ class MessageHandler {
 				// print out username and counter for each item
 				let response = 'Die Gesamtliste sieht wie folgt aus:\n';
 				Object.keys(fullListAggregated).forEach((itemName) => {
-					response += '\n' + itemName + ':';
+					response += '\n' + itemName + ': \t';
 					fullListAggregated[itemName].forEach((item) => {
-						response += '\n\t' + item.user_name + ': ' + item.counter;
+						response += item.user_name + ': ' + item.counter + ', ';
 					});
 				});
 
