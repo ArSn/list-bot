@@ -457,6 +457,7 @@ describe('MessageHandler', () => {
 				'!add',
 				'!showlist',
 				'!showfulllist',
+				'!deletelist',
 			];
 
 			commands.forEach((command) => {

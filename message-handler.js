@@ -4,6 +4,9 @@ const { Item } = require('./item');
 const { User } = require('./user');
 const { FullList } = require('./full-list');
 
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+
 class MessageHandler {
 
 	constructor(client, db) {
@@ -41,6 +44,7 @@ class MessageHandler {
 			'newitem',
 			'showlist',
 			'showfulllist',
+			'deletelist',
 		].includes(command)) {
 			console.log(`Unknown command "!${command}", ignoring.`);
 			return;
@@ -62,6 +66,7 @@ class MessageHandler {
 					**!showlist** - Liste und Zähler aller Items für den aktuellen User anzeigen.
 					**!showlist <user_name>** - Liste und Zähler aller Items für den angegebenen User anzeigen.
 					**!showfulllist** - Liste und Zähler aller Items von allen Usern anzeigen.
+					**!deletelist** - Liste und Zähler für den aktuellen User löschen.
 				`;
 
 				this.respond(message,
@@ -171,8 +176,62 @@ class MessageHandler {
 				this.respond(message, `${discord_user.username} hat ${item_count} mal ${item_name} hinzugefügt. Stand jetzt: ${newCount}`);
 				break;
 			}
+			case 'deletelist': {
+
+				const user = new User(this.db);
+				if (!await user.load(discord_user.id)) {
+					this.respond(message, 'Du hast noch keine Items auf der Liste.');
+					break;
+				}
+
+
+				const filter = i => i.customId === 'delete-list' && i.user.id === discord_user.id;
+
+				const collector = message.channel.createMessageComponentCollector({ filter, time: 60000 });
+
+
+				collector.on('collect', async i => {
+					// todo: delete the list
+					await i.update({ content: 'LISTE IST GELÖSCHT!', components: [] });
+				});
+
+
+
+
+				const row = new ActionRowBuilder()
+					.addComponents(
+						new ButtonBuilder()
+							.setCustomId('delete-list')
+							.setLabel('JETZT LÖSCHEN')
+							.setStyle(ButtonStyle.Danger),
+					);
+
+				// todo: show the list in order to confirm deletion
+				const sentDeleteMessage = await message.reply({ content: 'Bist du dir sicher, dass du deine Liste löschen möchtest?', components: [row] });
+
+
+				collector.on('end', (collected) => {
+
+					if (collected.size === 0) {
+						sentDeleteMessage.edit({
+							content: 'Löschen abgebrochen. Bitte bestätige innerhalb von 60 Sekunden. Um es erneut zu versuchen gib wieder !deletelist ein.',
+							components: [],
+						});
+					}
+
+					// Nothing to do otherwise as the message is already deleted then.
+				});
+			}
 		}
 
+		console.log('-------------------------------------------EOM-----------------------------------------------');
+	}
+
+	async handleButtonClick(interaction) {
+
+
+		console.log('-------------------------------------------SOM-----------------------------------------------');
+		console.log('Button clicked: ' + interaction.customId);
 		console.log('-------------------------------------------EOM-----------------------------------------------');
 	}
 }

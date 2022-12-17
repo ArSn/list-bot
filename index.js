@@ -35,6 +35,7 @@ const { open } = require('sqlite');
 			GatewayIntentBits.Guilds,
 			GatewayIntentBits.GuildMessages,
 			GatewayIntentBits.MessageContent,
+			GatewayIntentBits.DirectMessages,
 		],
 	});
 
