@@ -440,4 +440,31 @@ describe('MessageHandler', () => {
 		});
 	});
 
+	describe('Handles !help command', () => {
+		test('Responds with help text including all commands', async () => {
+			const testDb = await connectToTestDatabase();
+
+			const { channelSendSpy, messageHandler } = createSpiedOnMessageHandler(testDb);
+
+			const messageMock = {
+				content: '!help',
+			};
+			await messageHandler.handleMessage(messageMock);
+
+			const commands = [
+				'!help',
+				'!newitem',
+				'!add',
+				'!showlist',
+				'!showfulllist',
+			];
+
+			commands.forEach((command) => {
+				expect(channelSendSpy).toHaveBeenCalledWith(expect.stringContaining(command));
+			});
+
+			await testDb.close();
+		});
+	});
+
 });

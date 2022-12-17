@@ -36,6 +36,7 @@ class MessageHandler {
 		const command = tokenizedMessage[0].substring(1);
 
 		if (![
+			'help',
 			'add',
 			'newitem',
 			'showlist',
@@ -52,6 +53,21 @@ class MessageHandler {
 		let discord_user = message.author;
 
 		switch (command) {
+			case 'help': {
+
+				const helpText = `
+					**!help** - Diese Hilfe anzeigen.
+					**!add <item_count> <item_name>** - Zähler für erlaubtes Item erhöhen.
+					**!newitem <item_name>** - Neues Item erlauben.
+					**!showlist** - Liste und Zähler aller Items für den aktuellen User anzeigen.
+					**!showlist <user_name>** - Liste und Zähler aller Items für den angegebenen User anzeigen.
+					**!showfulllist** - Liste und Zähler aller Items von allen Usern anzeigen.
+				`;
+
+				this.respond(message,
+					helpText.replaceAll('\t', ''));
+				break;
+			}
 			case 'newitem': {
 				item_name = tokenizedMessage.slice(1).join(' ');
 
